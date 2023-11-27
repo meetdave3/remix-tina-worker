@@ -1,3 +1,9 @@
+import { useLoaderData } from "@remix-run/react";
+import { useTina } from "tinacms/dist/react";
+
+import { TinaMarkdown } from "tinacms/dist/rich-text";
+import { client } from "tina/__generated__/client";
+
 import type { MetaFunction } from "@remix-run/cloudflare";
 
 export const meta: MetaFunction = () => {
@@ -7,35 +13,32 @@ export const meta: MetaFunction = () => {
   ];
 };
 
+export const loader = async () => {
+  const { data, query, variables } = await client.queries.page({
+    relativePath: "home.mdx",
+  });
+
+  return {
+    props: {
+      data,
+      query,
+      variables,
+    },
+  };
+};
+
 export default function Index() {
+  const { props } = useLoaderData() as any;
+  const { data } = useTina({
+    query: props.query,
+    variables: props.variables,
+    data: props.data,
+  });
+
+
   return (
     <div style={{ fontFamily: "system-ui, sans-serif", lineHeight: "1.8" }}>
-      <h1>Welcome to Remix</h1>
-      <ul>
-        <li>
-          <a
-            target="_blank"
-            href="https://remix.run/tutorials/blog"
-            rel="noreferrer"
-          >
-            15m Quickstart Blog Tutorial
-          </a>
-        </li>
-        <li>
-          <a
-            target="_blank"
-            href="https://remix.run/tutorials/jokes"
-            rel="noreferrer"
-          >
-            Deep Dive Jokes App Tutorial
-          </a>
-        </li>
-        <li>
-          <a target="_blank" href="https://remix.run/docs" rel="noreferrer">
-            Remix Docs
-          </a>
-        </li>
-      </ul>
+      <TinaMarkdown content={data.page.body} />
     </div>
   );
 }
